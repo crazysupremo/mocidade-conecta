@@ -455,10 +455,17 @@ async function loadLeaderMembers() {
       (u) => `
     <div class="leader-row">
       <div>
-        <strong>${escapeHtml(u.nickname)}</strong> ${u.is_leader ? '🛡️' : ''} ${u.is_banned ? '<span style="color:#c0392b;">(banido)</span>' : ''}
+        <strong>${escapeHtml(u.nickname)}</strong> ${u.is_admin ? '👑 admin' : u.is_leader ? '🛡️ líder' : ''} ${u.is_banned ? '<span style="color:#c0392b;">(banido)</span>' : ''}
         <div class="hint">${escapeHtml(u.real_name)} · ${escapeHtml(u.email)}</div>
       </div>
       <div class="leader-row-actions">
+        ${
+          me.is_admin && !u.is_admin
+            ? u.is_leader
+              ? `<button data-id="${u.id}" class="btn-demote">Remover liderança</button>`
+              : `<button data-id="${u.id}" class="btn-promote">Promover a líder</button>`
+            : ''
+        }
         ${
           u.is_banned
             ? `<button data-id="${u.id}" class="btn-unban">Desbanir</button>`
@@ -469,6 +476,21 @@ async function loadLeaderMembers() {
   `
     )
     .join('');
+  listEl.querySelectorAll('.btn-promote').forEach((btn) => {
+    btn.onclick = async () => {
+      await fetch(`/api/leader/users/${btn.dataset.id}/promote`, { method: 'POST', credentials: 'include' });
+      showCopyToast('Promovido a líder.');
+      loadLeaderMembers();
+    };
+  });
+  listEl.querySelectorAll('.btn-demote').forEach((btn) => {
+    btn.onclick = async () => {
+      if (!confirm('Remover a liderança dessa pessoa?')) return;
+      await fetch(`/api/leader/users/${btn.dataset.id}/demote`, { method: 'POST', credentials: 'include' });
+      showCopyToast('Liderança removida.');
+      loadLeaderMembers();
+    };
+  });
   listEl.querySelectorAll('.btn-ban').forEach((btn) => {
     btn.onclick = async () => {
       const reason = prompt('Motivo do banimento:', '');

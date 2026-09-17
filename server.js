@@ -498,7 +498,7 @@ app.get(
   asyncHandler(async (req, res) => {
     res.json(
       await db.all(
-        'SELECT id, nickname, real_name, email, birth_date, is_leader, is_banned, ban_reason, timeout_until, created_at FROM users ORDER BY created_at DESC'
+        'SELECT id, nickname, real_name, email, birth_date, is_leader, is_admin, is_banned, ban_reason, timeout_until, created_at FROM users ORDER BY created_at DESC'
       )
     );
   })
@@ -553,6 +553,35 @@ app.post(
   asyncHandler(async (req, res) => {
     if (!req.user.is_admin) return res.status(403).json({ error: 'Só o administrador pode promover líderes' });
     await db.run('UPDATE users SET is_leader = 1 WHERE id = ?', [req.params.id]);
+    await db.run('INSERT INTO audit_logs (id, actor_id, actor_nickname, action, target_type, target_id, details) VALUES (?, ?, ?, ?, ?, ?, ?)', [
+      uuidv4(),
+      req.user.id,
+      req.user.nickname,
+      'promote_leader',
+      'user',
+      req.params.id,
+      null,
+    ]);
+    res.json({ ok: true });
+  })
+);
+
+app.post(
+  '/api/leader/users/:id/demote',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    if (!req.user.is_admin) return res.status(403).json({ error: 'Só o administrador pode remover líderes' });
+    if (req.params.id === req.user.id) return res.status(400).json({ error: 'Você não pode remover sua própria liderança' });
+    await db.run('UPDATE users SET is_leader = 0 WHERE id = ?', [req.params.id]);
+    await db.run('INSERT INTO audit_logs (id, actor_id, actor_nickname, action, target_type, target_id, details) VALUES (?, ?, ?, ?, ?, ?, ?)', [
+      uuidv4(),
+      req.user.id,
+      req.user.nickname,
+      'demote_leader',
+      'user',
+      req.params.id,
+      null,
+    ]);
     res.json({ ok: true });
   })
 );
