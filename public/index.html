@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<title>Mocidade Conecta</title>
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+
+<!-- ---------- TELA DE AUTENTICAÇÃO ---------- -->
+<div id="auth-screen" class="auth-screen">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <span class="auth-brand-icon">🤝</span>
+      <h1>Mocidade Conecta</h1>
+      <p class="auth-tagline">Um espaço seguro pra se conhecer por apelido — moderado o tempo todo.</p>
+    </div>
+
+    <div class="auth-tabs">
+      <button type="button" id="tab-login" class="auth-tab active">Entrar</button>
+      <button type="button" id="tab-register" class="auth-tab">Criar conta</button>
+    </div>
+
+    <form id="form-login" class="auth-form">
+      <label>E-mail</label>
+      <input type="email" id="login-email" required />
+      <label>Senha</label>
+      <input type="password" id="login-password" required />
+      <button type="submit" class="btn-primary">Entrar</button>
+      <p id="login-error" class="auth-error"></p>
+    </form>
+
+    <form id="form-register" class="auth-form hidden">
+      <label>Apelido (o que todo mundo vai ver)</label>
+      <input type="text" id="reg-nickname" maxlength="24" placeholder="ex: Joana_23" required />
+      <label>Nome completo (fica reservado, nunca aparece publicamente)</label>
+      <input type="text" id="reg-realname" maxlength="100" required />
+      <label>E-mail</label>
+      <input type="email" id="reg-email" required />
+      <label>Senha</label>
+      <input type="password" id="reg-password" minlength="6" required />
+      <label>Data de nascimento</label>
+      <input type="date" id="reg-birthdate" required />
+      <p class="hint">É preciso ter pelo menos 13 anos. Entre 13 e 17, é necessário ter autorização dos pais/responsável.</p>
+
+      <label class="checkbox-row">
+        <input type="checkbox" id="reg-terms-checkbox" />
+        Li e concordo com os <a href="#" id="reg-terms-link">Termos de Uso e Proteção (ECA/ECA Digital)</a>
+      </label>
+      <button type="submit" class="btn-primary">Criar conta</button>
+      <p id="register-error" class="auth-error"></p>
+    </form>
+
+    <!-- Confirmação de e-mail (bloqueante) -->
+    <form id="form-email-verify" class="auth-form hidden">
+      <p class="hint">Enviamos um código de 6 dígitos pra <strong id="email-verify-address"></strong>.</p>
+      <input type="text" id="email-verify-code" maxlength="6" placeholder="000000" style="text-align:center; letter-spacing:4px;" required />
+      <button type="submit" class="btn-primary">Confirmar e-mail</button>
+      <p id="email-verify-error" class="auth-error"></p>
+      <div class="auth-form-links">
+        <button type="button" id="btn-resend-code" class="link-btn">Reenviar código</button>
+        <button type="button" id="btn-logout-verify" class="link-btn">Sair</button>
+      </div>
+    </form>
+
+    <!-- Termos (bloqueante) -->
+    <div id="form-terms-accept" class="auth-form hidden">
+      <p class="hint">Antes de continuar, leia e aceite os Termos.</p>
+      <div id="terms-content-box" class="terms-box"></div>
+      <label class="checkbox-row">
+        <input type="checkbox" id="terms-accept-checkbox" />
+        Li e aceito os Termos acima
+      </label>
+      <button type="button" id="btn-terms-accept-submit" class="btn-primary" disabled>Continuar</button>
+      <p id="terms-accept-error" class="auth-error"></p>
+      <button type="button" id="btn-logout-terms" class="link-btn">Sair</button>
+    </div>
+  </div>
+</div>
+
+<!-- ---------- APP PRINCIPAL ---------- -->
+<div id="app" class="app hidden">
+  <div id="mobile-backdrop" class="mobile-backdrop hidden"></div>
+
+  <aside id="rooms-sidebar" class="rooms-sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-brand">🤝 Mocidade Conecta</span>
+      <button type="button" id="btn-close-sidebar-mobile" class="icon-btn mobile-only">✕</button>
+    </div>
+    <div id="rooms-list" class="rooms-list"></div>
+    <div class="sidebar-footer">
+      <div class="me-card">
+        <span id="me-avatar" class="me-avatar">🙂</span>
+        <span id="me-nickname" class="me-nickname"></span>
+      </div>
+      <button type="button" id="btn-leader-panel" class="link-btn hidden">🛡️ Painel de liderança</button>
+      <button type="button" id="btn-my-profile" class="link-btn">👤 Meu perfil</button>
+      <button type="button" id="btn-logout" class="link-btn">🚪 Sair</button>
+    </div>
+  </aside>
+
+  <main class="chat-main">
+    <header class="chat-header">
+      <button type="button" id="btn-open-sidebar-mobile" class="icon-btn mobile-only">☰</button>
+      <div class="chat-header-info">
+        <span id="chat-room-icon">💬</span>
+        <div>
+          <div id="chat-room-name">Selecione uma sala</div>
+          <div id="chat-room-desc" class="chat-room-desc"></div>
+        </div>
+      </div>
+    </header>
+
+    <div id="messages-list" class="messages-list"></div>
+
+    <form id="form-send-message" class="message-form">
+      <input type="text" id="message-input" maxlength="1000" placeholder="Escreva uma mensagem..." autocomplete="off" />
+      <button type="submit" class="btn-send">Enviar</button>
+    </form>
+  </main>
+</div>
+
+<!-- Modal: denunciar mensagem -->
+<div id="modal-report" class="modal-overlay hidden">
+  <div class="modal-card">
+    <h2>🚩 Denunciar mensagem</h2>
+    <label>Motivo</label>
+    <textarea id="report-reason" rows="3" placeholder="Descreva o que aconteceu..."></textarea>
+    <div class="modal-actions">
+      <button type="button" id="btn-cancel-report">Cancelar</button>
+      <button type="button" id="btn-submit-report" class="btn-primary">Enviar denúncia</button>
+    </div>
+    <p id="report-error" class="auth-error"></p>
+  </div>
+</div>
+
+<!-- Modal: meu perfil -->
+<div id="modal-profile" class="modal-overlay hidden">
+  <div class="modal-card">
+    <h2>👤 Meu perfil</h2>
+    <label>Emoji do avatar</label>
+    <input type="text" id="profile-avatar-input" maxlength="4" style="width:60px; text-align:center; font-size:20px;" />
+    <label>Sobre você (opcional, até 200 caracteres)</label>
+    <textarea id="profile-bio-input" rows="3" maxlength="200"></textarea>
+    <div class="modal-actions">
+      <button type="button" id="btn-close-profile">Fechar</button>
+      <button type="button" id="btn-save-profile" class="btn-primary">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: painel de liderança -->
+<div id="modal-leader" class="modal-overlay hidden">
+  <div class="modal-card modal-card-wide">
+    <h2>🛡️ Painel de liderança</h2>
+    <div class="leader-tabs">
+      <button type="button" class="leader-tab active" data-tab="reports">Denúncias</button>
+      <button type="button" class="leader-tab" data-tab="flagged">Sinalizadas pela IA</button>
+      <button type="button" class="leader-tab" data-tab="members">Membros</button>
+    </div>
+    <div id="leader-tab-reports" class="leader-tab-panel">
+      <div id="leader-reports-list"></div>
+    </div>
+    <div id="leader-tab-flagged" class="leader-tab-panel hidden">
+      <div id="leader-flagged-list"></div>
+    </div>
+    <div id="leader-tab-members" class="leader-tab-panel hidden">
+      <div id="leader-members-list"></div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" id="btn-close-leader">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

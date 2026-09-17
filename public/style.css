@@ -1,0 +1,181 @@
+/* Mocidade Conecta — visual acolhedor, quente, diferente de tema "gamer"
+   escuro de propósito (público mais amplo, contexto de grupo/igreja).
+   Mobile-first: layout de coluna única com gaveta lateral no celular,
+   2 colunas fixas a partir de tablet/desktop. */
+
+* { box-sizing: border-box; }
+:root {
+  --brand-1: #ff6b6b;
+  --brand-2: #ffa94d;
+  --gradient-brand: linear-gradient(135deg, var(--brand-1) 0%, var(--brand-2) 100%);
+  --bg-page: #fff8f2;
+  --bg-card: #ffffff;
+  --bg-soft: #fff1e6;
+  --text-primary: #3a2c2c;
+  --text-secondary: #8a7268;
+  --text-tertiary: #b8a89c;
+  --border-color: #f0ddd0;
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+  --shadow-soft: 0 8px 24px rgba(255, 107, 107, 0.12);
+}
+html, body { height: 100%; margin: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+.hidden { display: none !important; }
+button { font-family: inherit; cursor: pointer; transition: transform 0.1s ease, filter 0.12s ease, background 0.12s ease; }
+button:active { transform: scale(0.96); }
+input, textarea {
+  font-family: inherit; width: 100%; padding: 12px 14px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);
+  font-size: 15px; margin-top: 4px;
+}
+input:focus, textarea:focus { outline: none; border-color: var(--brand-1); box-shadow: 0 0 0 3px rgba(255,107,107,0.15); }
+label { display: block; font-size: 13px; font-weight: 700; color: var(--text-secondary); margin-top: 14px; }
+.hint { font-size: 12.5px; color: var(--text-tertiary); line-height: 1.5; margin: 6px 0 0; }
+.link-btn { background: none; border: none; color: var(--text-secondary); font-size: 13.5px; font-weight: 600; padding: 8px 4px; text-align: left; }
+.link-btn:hover { color: var(--brand-1); }
+.btn-primary {
+  width: 100%; margin-top: 18px; padding: 13px; border: none; border-radius: 999px;
+  background: var(--gradient-brand); color: white; font-weight: 700; font-size: 15px;
+  box-shadow: var(--shadow-soft);
+}
+.btn-primary:hover { filter: brightness(1.05); box-shadow: 0 10px 28px rgba(255,107,107,0.22); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.checkbox-row { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; font-weight: 500; color: var(--text-primary); margin-top: 16px; }
+.checkbox-row input { width: auto; margin: 2px 0 0; }
+.checkbox-row a { color: var(--brand-1); font-weight: 700; }
+.auth-error { color: #e0483f; font-size: 13px; font-weight: 600; margin-top: 10px; min-height: 1em; }
+
+/* ---------- Tela de autenticação ---------- */
+.auth-screen {
+  min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 24px 16px;
+  background: var(--gradient-brand);
+}
+.auth-card {
+  width: 100%; max-width: 420px; background: var(--bg-card); border-radius: var(--radius-lg);
+  padding: 32px 28px; box-shadow: 0 24px 60px rgba(0,0,0,0.18);
+}
+.auth-brand { text-align: center; margin-bottom: 20px; }
+.auth-brand-icon { font-size: 40px; display: block; margin-bottom: 8px; }
+.auth-brand h1 { font-size: 22px; margin: 0 0 6px; color: var(--text-primary); }
+.auth-tagline { font-size: 13.5px; color: var(--text-secondary); margin: 0; line-height: 1.5; }
+.auth-tabs { display: flex; background: var(--bg-soft); border-radius: 999px; padding: 4px; margin-bottom: 8px; }
+.auth-tab { flex: 1; background: none; border: none; padding: 10px; border-radius: 999px; font-weight: 700; font-size: 13.5px; color: var(--text-secondary); }
+.auth-tab.active { background: var(--bg-card); color: var(--brand-1); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+.auth-form-links { display: flex; justify-content: space-between; margin-top: 10px; }
+.terms-box {
+  max-height: 240px; overflow-y: auto; white-space: pre-wrap; font-size: 12px; line-height: 1.6;
+  background: var(--bg-soft); border-radius: var(--radius-sm); padding: 14px; margin-top: 8px; color: var(--text-primary);
+}
+
+/* ---------- App principal ---------- */
+.app { display: flex; height: 100dvh; overflow: hidden; }
+.mobile-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 40; }
+
+.rooms-sidebar {
+  width: 280px; flex-shrink: 0; background: var(--bg-card); border-right: 1px solid var(--border-color);
+  display: flex; flex-direction: column; height: 100%;
+}
+.sidebar-header {
+  display: flex; align-items: center; justify-content: space-between; padding: 18px 18px 14px;
+  border-bottom: 1px solid var(--border-color);
+}
+.sidebar-brand { font-weight: 800; font-size: 15px; color: var(--brand-1); }
+.rooms-list { flex: 1; overflow-y: auto; padding: 10px; }
+.room-item {
+  display: flex; align-items: center; gap: 10px; padding: 12px 12px; border-radius: var(--radius-sm);
+  margin-bottom: 4px; cursor: pointer; transition: background 0.12s ease;
+}
+.room-item:hover { background: var(--bg-soft); }
+.room-item.active { background: var(--gradient-brand); }
+.room-item.active .room-item-name, .room-item.active .room-item-desc { color: white; }
+.room-item-icon { font-size: 20px; flex-shrink: 0; }
+.room-item-name { font-weight: 700; font-size: 14px; color: var(--text-primary); }
+.room-item-desc { font-size: 11.5px; color: var(--text-tertiary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sidebar-footer { border-top: 1px solid var(--border-color); padding: 14px; display: flex; flex-direction: column; gap: 2px; }
+.me-card { display: flex; align-items: center; gap: 10px; padding: 8px 4px 12px; }
+.me-avatar { font-size: 24px; }
+.me-nickname { font-weight: 700; font-size: 14px; }
+
+.chat-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.chat-header {
+  display: flex; align-items: center; gap: 10px; padding: 14px 20px; border-bottom: 1px solid var(--border-color);
+  background: var(--bg-card); flex-shrink: 0;
+}
+.chat-header-info { display: flex; align-items: center; gap: 10px; }
+#chat-room-icon { font-size: 22px; }
+#chat-room-name { font-weight: 800; font-size: 15px; }
+.chat-room-desc { font-size: 12px; color: var(--text-tertiary); }
+.icon-btn { background: none; border: none; font-size: 20px; padding: 6px; border-radius: var(--radius-sm); }
+.icon-btn:hover { background: var(--bg-soft); }
+.mobile-only { display: none; }
+
+.messages-list { flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+.empty-hint { text-align: center; color: var(--text-tertiary); font-size: 13.5px; padding: 30px 0; }
+.message-row { display: flex; gap: 10px; max-width: 640px; }
+.message-row.own { align-self: flex-end; flex-direction: row-reverse; }
+.message-avatar {
+  width: 34px; height: 34px; border-radius: 50%; background: var(--bg-soft); display: flex;
+  align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;
+}
+.message-bubble { background: var(--bg-soft); border-radius: var(--radius-md); padding: 10px 14px; position: relative; }
+.message-row.own .message-bubble { background: var(--gradient-brand); color: white; }
+.message-row.own .message-meta-name, .message-row.own .message-meta-time { color: rgba(255,255,255,0.85); }
+.message-meta { display: flex; gap: 6px; align-items: baseline; margin-bottom: 2px; }
+.message-meta-name { font-weight: 700; font-size: 12.5px; color: var(--brand-1); }
+.message-meta-time { font-size: 10.5px; color: var(--text-tertiary); }
+.message-content { font-size: 14.5px; line-height: 1.45; word-break: break-word; }
+.message-report-btn {
+  background: none; border: none; font-size: 11px; color: var(--text-tertiary); padding: 2px 0; margin-top: 4px;
+}
+.message-row.own .message-report-btn { display: none; }
+.message-report-btn:hover { color: var(--brand-1); }
+
+.message-form { display: flex; gap: 10px; padding: 14px 20px; border-top: 1px solid var(--border-color); background: var(--bg-card); flex-shrink: 0; }
+.message-form input { margin: 0; border-radius: 999px; }
+.btn-send { background: var(--gradient-brand); color: white; border: none; border-radius: 999px; padding: 0 22px; font-weight: 700; font-size: 14px; }
+
+/* ---------- Modais ---------- */
+.modal-overlay { position: fixed; inset: 0; background: rgba(58,44,44,0.45); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 16px; }
+.modal-card { background: var(--bg-card); border-radius: var(--radius-lg); padding: 24px; width: 100%; max-width: 380px; max-height: 86vh; overflow-y: auto; box-shadow: 0 24px 60px rgba(0,0,0,0.25); }
+.modal-card-wide { max-width: 560px; }
+.modal-card h2 { margin-top: 0; font-size: 17px; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+.modal-actions button { padding: 10px 18px; border-radius: 999px; border: 1.5px solid var(--border-color); background: var(--bg-card); font-weight: 700; font-size: 13.5px; }
+.modal-actions .btn-primary { width: auto; margin-top: 0; }
+
+.leader-tabs { display: flex; gap: 6px; background: var(--bg-soft); border-radius: 999px; padding: 4px; margin: 14px 0; }
+.leader-tab { flex: 1; background: none; border: none; padding: 8px; border-radius: 999px; font-size: 12.5px; font-weight: 700; color: var(--text-secondary); }
+.leader-tab.active { background: var(--bg-card); color: var(--brand-1); }
+.leader-tab-panel.hidden { display: none; }
+.leader-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px;
+  border-radius: var(--radius-sm); background: var(--bg-soft); margin-bottom: 8px; font-size: 13px;
+}
+.leader-row-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.leader-row-actions button { padding: 5px 10px; border-radius: 999px; border: none; background: var(--bg-card); font-size: 11.5px; font-weight: 700; }
+.leader-row-actions button.danger { background: #ffe3e0; color: #c0392b; }
+
+/* ---------- Responsivo: celular vira gaveta ---------- */
+@media (max-width: 760px) {
+  .mobile-only { display: inline-flex; align-items: center; justify-content: center; }
+  .rooms-sidebar {
+    position: fixed; top: 0; left: 0; height: 100dvh; width: 82vw; max-width: 300px; z-index: 45;
+    transform: translateX(-100%); transition: transform 0.2s ease; box-shadow: 4px 0 24px rgba(0,0,0,0.2);
+  }
+  .rooms-sidebar.open { transform: translateX(0); }
+  .auth-card { padding: 26px 20px; }
+  .message-row { max-width: 88%; }
+  .chat-header { padding: 12px 14px; }
+  .messages-list { padding: 12px 14px; }
+  .message-form { padding: 10px 14px; }
+}
+@media (min-width: 761px) {
+  #btn-close-sidebar-mobile, #btn-open-sidebar-mobile { display: none; }
+}
