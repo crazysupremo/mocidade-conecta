@@ -247,10 +247,26 @@ function renderMessage(msg, skipScroll) {
         </div>
         <div class="message-content">${escapeHtml(msg.content)}</div>
       </div>
-      <button type="button" class="message-report-btn">🚩 Denunciar</button>
+      <div class="message-actions">
+        <button type="button" class="message-report-btn">🚩 Denunciar</button>
+        ${me.is_leader || me.is_admin ? '<button type="button" class="message-delete-btn">🗑️ Apagar</button>' : ''}
+      </div>
     </div>
   `;
   row.querySelector('.message-report-btn').onclick = () => openReportModal(msg.id, msg.user_id);
+  const deleteBtn = row.querySelector('.message-delete-btn');
+  if (deleteBtn) {
+    deleteBtn.onclick = async () => {
+      if (!confirm('Apagar essa mensagem pra todo mundo?')) return;
+      const res = await fetch(`/api/leader/messages/${msg.id}/delete`, { method: 'POST', credentials: 'include' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || 'Não deu pra apagar a mensagem.');
+        return;
+      }
+      row.remove();
+    };
+  }
   listEl.appendChild(row);
   if (!skipScroll) listEl.scrollTop = listEl.scrollHeight;
 }

@@ -140,11 +140,13 @@ label { display: block; font-size: 13px; font-weight: 700; color: var(--text-sec
 .message-meta-name { font-weight: 700; font-size: 12.5px; color: var(--brand-1); }
 .message-meta-time { font-size: 10.5px; color: var(--text-tertiary); }
 .message-content { font-size: 14.5px; line-height: 1.45; word-break: break-word; }
-.message-report-btn {
-  background: none; border: none; font-size: 11px; color: var(--text-tertiary); padding: 2px 0; margin-top: 4px;
+.message-actions { display: flex; gap: 10px; margin-top: 4px; }
+.message-report-btn, .message-delete-btn {
+  background: none; border: none; font-size: 11px; color: var(--text-tertiary); padding: 2px 0;
 }
 .message-row.own .message-report-btn { display: none; }
 .message-report-btn:hover { color: var(--brand-1); }
+.message-delete-btn:hover { color: #e0483f; }
 
 .message-form { display: flex; gap: 10px; padding: 14px 20px; border-top: 1px solid var(--border-color); background: var(--bg-card); flex-shrink: 0; }
 .message-form input { margin: 0; border-radius: 999px; }

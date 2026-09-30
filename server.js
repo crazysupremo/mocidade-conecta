@@ -312,8 +312,11 @@ app.get(
   '/api/rooms/:id/messages',
   requireAuth,
   asyncHandler(async (req, res) => {
+    // CORRIGIDO: mensagem apagada (pela IA ou por um líder) continuava
+    // aparecendo pra quem recarregasse a página ou abrisse a sala depois —
+    // o evento chat:deleted só remove da tela de quem já está vendo ao vivo.
     const rows = await db.all(
-      'SELECT id, room_id, user_id, nickname, content, created_at, deleted FROM messages WHERE room_id = ? ORDER BY created_at DESC LIMIT 100',
+      'SELECT id, room_id, user_id, nickname, content, created_at, deleted FROM messages WHERE room_id = ? AND deleted = 0 ORDER BY created_at DESC LIMIT 100',
       [req.params.id]
     );
     res.json(rows.reverse());
@@ -422,6 +425,28 @@ app.post(
   requireLeader,
   asyncHandler(async (req, res) => {
     await db.run("UPDATE reports SET status = 'resolvida' WHERE id = ?", [req.params.id]);
+    res.json({ ok: true });
+  })
+);
+
+// Item pedido: líder/admin poder apagar qualquer mensagem na hora, direto do
+// chat — antes só mensagem sinalizada pela IA sumia sozinha; denúncia só
+// registrava, não apagava nada. Reaproveita o mesmo evento chat:deleted que
+// a moderação automática já usa, então o front-end não precisou de nada novo
+// pra "sumir" a mensagem na tela de quem estiver vendo.
+app.post(
+  '/api/leader/messages/:id/delete',
+  requireAuth,
+  requireLeader,
+  asyncHandler(async (req, res) => {
+    const message = await db.get('SELECT id, room_id, user_id, nickname FROM messages WHERE id = ?', [req.params.id]);
+    if (!message) return res.status(404).json({ error: 'Mensagem não encontrada' });
+    await db.run('UPDATE messages SET deleted = 1 WHERE id = ?', [req.params.id]);
+    io.to('room:' + message.room_id).emit('chat:deleted', { id: message.id, room_id: message.room_id });
+    await db.run(
+      'INSERT INTO audit_logs (id, actor_id, actor_nickname, action, target_type, target_id, details) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [uuidv4(), req.user.id, req.user.nickname, 'delete_message', 'message', message.id, JSON.stringify({ author: message.nickname })]
+    );
     res.json({ ok: true });
   })
 );
