@@ -135,10 +135,6 @@ document.getElementById('form-email-verify').onsubmit = async (e) => {
   }
 };
 
-document.getElementById('btn-resend-code').onclick = async () => {
-  await fetch('/api/resend-verification-code', { method: 'POST', credentials: 'include' });
-  showCopyToast('Código reenviado — confira sua caixa de entrada.');
-};
 document.getElementById('btn-logout-verify').onclick = doLogout;
 document.getElementById('btn-logout-terms').onclick = doLogout;
 
