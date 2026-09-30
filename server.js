@@ -96,7 +96,10 @@ Ao marcar "Li e aceito", você confirma que leu e concorda com todo o conteúdo 
 
 // ---------- AUTH ----------
 
-const TERMS_ALLOWLIST = new Set(['/api/me', '/api/logout', '/api/terms/public', '/api/verify-email', '/api/resend-verification-code']);
+// Verificação de e-mail REMOVIDA a pedido — o cadastro já nasce com
+// email_verified = 1 (ver /api/register). O allowlist continua existindo só
+// pra Termos de Uso agora.
+const TERMS_ALLOWLIST = new Set(['/api/me', '/api/logout', '/api/terms/public']);
 
 async function requireAuth(req, res, next) {
   try {
@@ -107,9 +110,6 @@ async function requireAuth(req, res, next) {
     if (!user || user.is_banned) return res.status(403).json({ error: 'Conta banida ou inválida' });
     const sessionRow = await db.get('SELECT * FROM user_sessions WHERE id = ? AND user_id = ?', [req.session.sessionId, user.id]);
     if (!sessionRow || sessionRow.revoked) return res.status(401).json({ error: 'Sessão encerrada — faça login de novo' });
-    if (!user.email_verified && !TERMS_ALLOWLIST.has(req.path)) {
-      return res.status(403).json({ error: 'Confirme seu e-mail antes de continuar.', requiresEmailVerification: true });
-    }
     if (user.terms_version !== CURRENT_TERMS_VERSION && !TERMS_ALLOWLIST.has(req.path)) {
       return res.status(403).json({ error: 'Aceite os Termos antes de continuar.', requiresTermsAcceptance: true });
     }
@@ -127,10 +127,6 @@ function requireLeader(req, res, next) {
   next();
 }
 
-function generateCode() {
-  return String(Math.floor(100000 + Math.random() * 900000));
-}
-
 async function createSession(userId, req) {
   const id = uuidv4();
   await db.run('INSERT INTO user_sessions (id, user_id, user_agent) VALUES (?, ?, ?)', [
@@ -139,32 +135,6 @@ async function createSession(userId, req) {
     (req.headers['user-agent'] || '').slice(0, 200),
   ]);
   return id;
-}
-
-// E-mail de verificação — usa Resend se configurado (mesma lógica do NEXT
-// GAME); sem RESEND_API_KEY, só loga o código no console (deploy sem e-mail
-// configurado ainda consegue testar).
-async function sendVerificationEmail(email, code, nickname) {
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.RESEND_FROM || 'Mocidade Conecta <onboarding@resend.dev>';
-  if (!apiKey) {
-    console.log(`[E-MAIL SIMULADO] Código de verificação pra ${email} (${nickname}): ${code}`);
-    return;
-  }
-  try {
-    await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + apiKey },
-      body: JSON.stringify({
-        from,
-        to: email,
-        subject: 'Confirme seu e-mail — Mocidade Conecta',
-        html: `<p>Oi, ${nickname}!</p><p>Seu código de confirmação é: <strong>${code}</strong></p><p>Vale por 15 minutos.</p>`,
-      }),
-    });
-  } catch (err) {
-    console.error('Falha ao enviar e-mail:', err.message);
-  }
 }
 
 app.post(
@@ -217,11 +187,11 @@ app.post(
       .filter(Boolean);
     const isDesignatedAdmin = adminEmails.includes(String(email).toLowerCase());
     const id = uuidv4();
-    const code = generateCode();
-    const expires = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+    // Verificação de e-mail removida a pedido — a conta já nasce confirmada
+    // (email_verified = 1), sem precisar de código por e-mail.
     await db.run(
-      `INSERT INTO users (id, nickname, real_name, password_hash, email, birth_date, verification_code, verification_expires, is_admin, is_leader, terms_accepted_at, terms_version)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?)`,
+      `INSERT INTO users (id, nickname, real_name, password_hash, email, birth_date, email_verified, is_admin, is_leader, terms_accepted_at, terms_version)
+       VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, datetime('now'), ?)`,
       [
         id,
         nickname.trim(),
@@ -229,17 +199,14 @@ app.post(
         bcrypt.hashSync(password, 10),
         email,
         birth_date,
-        code,
-        expires,
         isFirstUser || isDesignatedAdmin ? 1 : 0,
         isFirstUser || isDesignatedAdmin ? 1 : 0,
         CURRENT_TERMS_VERSION,
       ]
     );
-    sendVerificationEmail(email, code, nickname.trim()).catch(() => {});
     req.session.userId = id;
     req.session.sessionId = await createSession(id, req);
-    res.json({ id, nickname: nickname.trim(), email, email_verified: false, requiresEmailVerification: true });
+    res.json({ id, nickname: nickname.trim(), email, email_verified: true, requiresEmailVerification: false });
   })
 );
 
@@ -260,8 +227,8 @@ app.post(
       id: user.id,
       nickname: user.nickname,
       email: user.email,
-      email_verified: !!user.email_verified,
-      requiresEmailVerification: !user.email_verified,
+      email_verified: true,
+      requiresEmailVerification: false,
       requiresTermsAcceptance: user.terms_version !== CURRENT_TERMS_VERSION,
     });
   })
@@ -274,38 +241,6 @@ app.post('/api/logout', (req, res) => {
   req.session = null;
   res.json({ ok: true });
 });
-
-app.post(
-  '/api/verify-email',
-  authLimiter,
-  requireAuth,
-  asyncHandler(async (req, res) => {
-    const { code } = req.body || {};
-    if (req.user.email_verified) return res.json({ ok: true });
-    if (!req.user.verification_code || req.user.verification_code !== String(code || '').trim()) {
-      return res.status(400).json({ error: 'Código incorreto' });
-    }
-    if (new Date(req.user.verification_expires) < new Date()) {
-      return res.status(400).json({ error: 'Código expirado — peça um novo.' });
-    }
-    await db.run('UPDATE users SET email_verified = 1, verification_code = NULL WHERE id = ?', [req.user.id]);
-    res.json({ ok: true });
-  })
-);
-
-app.post(
-  '/api/resend-verification-code',
-  authLimiter,
-  requireAuth,
-  asyncHandler(async (req, res) => {
-    if (req.user.email_verified) return res.json({ ok: true, already_verified: true });
-    const code = generateCode();
-    const expires = new Date(Date.now() + 15 * 60 * 1000).toISOString();
-    await db.run('UPDATE users SET verification_code = ?, verification_expires = ? WHERE id = ?', [code, expires, req.user.id]);
-    await sendVerificationEmail(req.user.email, code, req.user.nickname);
-    res.json({ ok: true });
-  })
-);
 
 app.get(
   '/api/me',

@@ -52,10 +52,6 @@ async function authRequest(url, body) {
       return;
     }
     me = data;
-    if (data.requiresEmailVerification) {
-      showEmailVerificationScreen();
-      return;
-    }
     if (data.requiresTermsAcceptance) {
       await showTermsAcceptanceScreen();
       return;
@@ -102,44 +98,10 @@ document.getElementById('reg-terms-link').onclick = async (e) => {
   alert(content);
 };
 
-function showEmailVerificationScreen() {
-  ['form-login', 'form-register', 'form-terms-accept'].forEach((id) => document.getElementById(id).classList.add('hidden'));
-  document.getElementById('email-verify-address').textContent = me.email || 'seu e-mail';
-  document.getElementById('email-verify-error').textContent = '';
-  document.getElementById('email-verify-code').value = '';
-  document.getElementById('form-email-verify').classList.remove('hidden');
-}
-
-document.getElementById('form-email-verify').onsubmit = async (e) => {
-  e.preventDefault();
-  const errEl = document.getElementById('email-verify-error');
-  errEl.textContent = '';
-  const code = document.getElementById('email-verify-code').value.trim();
-  const res = await fetch('/api/verify-email', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify({ code }),
-  });
-  const data = await res.json();
-  if (!res.ok) {
-    errEl.textContent = data.error || 'Código incorreto';
-    return;
-  }
-  const meRes = await fetch('/api/me', { credentials: 'include' });
-  me = await meRes.json();
-  if (!me.terms_accepted) {
-    await showTermsAcceptanceScreen();
-  } else {
-    startApp();
-  }
-};
-
-document.getElementById('btn-logout-verify').onclick = doLogout;
 document.getElementById('btn-logout-terms').onclick = doLogout;
 
 async function showTermsAcceptanceScreen() {
-  ['form-login', 'form-register', 'form-email-verify'].forEach((id) => document.getElementById(id).classList.add('hidden'));
+  ['form-login', 'form-register'].forEach((id) => document.getElementById(id).classList.add('hidden'));
   document.getElementById('terms-accept-error').textContent = '';
   document.getElementById('terms-accept-checkbox').checked = false;
   document.getElementById('btn-terms-accept-submit').disabled = true;
@@ -182,10 +144,6 @@ async function tryResumeSession() {
     const res = await fetch('/api/me', { credentials: 'include' });
     if (!res.ok) return;
     me = await res.json();
-    if (me.email_verified === false) {
-      showEmailVerificationScreen();
-      return;
-    }
     if (me.terms_accepted === false) {
       await showTermsAcceptanceScreen();
       return;

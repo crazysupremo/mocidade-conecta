@@ -5,7 +5,7 @@ Espaço seguro e moderado pra jovens de um grupo/igreja se conhecerem por apelid
 ## O que já está pronto
 
 - Cadastro com apelido (público) + nome real (reservado, só pra segurança/responsabilização) + data de nascimento obrigatória (mínimo 13 anos).
-- Confirmação de e-mail bloqueante.
+- Cadastro entra direto (sem confirmação de e-mail bloqueante — removida a pedido).
 - Termo de Uso + Proteção ECA/ECA Digital — checkbox obrigatória no cadastro.
 - 4 salas de grupo prontas: Sala Geral, Conhecendo uns aos outros, Pedidos de oração, Avisos.
 - Toda mensagem passa por moderação (BLUEX externo se configurado, senão Groq direto) — mensagem sinalizada é apagada retroativamente pra todo mundo.
@@ -29,11 +29,6 @@ Sem isso configurado, a moderação usa o Groq diretamente (ainda funciona, só 
 
 ### 3. Groq (moderação de texto + fallback)
 - `GROQ_API_KEY`
-
-### 4. E-mail de confirmação
-Sem configurar, o código de confirmação só aparece no log do servidor (dá pra testar, mas ninguém recebe e-mail de verdade). Pra ativar de verdade:
-- `RESEND_API_KEY`
-- `RESEND_FROM` (ex: `Mocidade Conecta <onboarding@resend.dev>`, ou seu domínio verificado no Resend)
 
 ### 5. Segurança da sessão
 - `SESSION_SECRET` — qualquer texto longo e aleatório (troque o valor de exemplo que está no código).
