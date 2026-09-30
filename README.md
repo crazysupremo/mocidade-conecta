@@ -38,6 +38,10 @@ Sem configurar, o código de confirmação só aparece no log do servidor (dá p
 ### 5. Segurança da sessão
 - `SESSION_SECRET` — qualquer texto longo e aleatório (troque o valor de exemplo que está no código).
 
+### 6. Admin garantido (opcional)
+Por padrão, a primeira conta cadastrada já nasce admin/líder. Se você quer GARANTIR que uma conta específica (a sua) seja sempre admin — mesmo que não seja a primeira a se cadastrar, ou mesmo que já tenha se cadastrado antes —, defina:
+- `ADMIN_EMAILS` — um ou mais e-mails separados por vírgula (ex: `voce@gmail.com,outroadmin@gmail.com`). No próximo boot do servidor, essas contas (se já existirem) são promovidas automaticamente; contas novas com esse e-mail já nascem admin.
+
 ## Rodando localmente
 
 ```

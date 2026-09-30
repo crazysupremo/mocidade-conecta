@@ -207,6 +207,15 @@ app.post(
 
     const countRow = await db.get('SELECT COUNT(*) as c FROM users');
     const isFirstUser = Number(countRow.c) === 0;
+    // ADMIN_EMAILS (variável de ambiente, e-mails separados por vírgula) —
+    // garante que uma conta específica sempre nasce admin/líder, sem depender
+    // de ser a primeira a se cadastrar (item pedido: "coloque um usuário
+    // vinculado ao meu como admin pra receber tudo, como no NEXT GAME").
+    const adminEmails = String(process.env.ADMIN_EMAILS || '')
+      .split(',')
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+    const isDesignatedAdmin = adminEmails.includes(String(email).toLowerCase());
     const id = uuidv4();
     const code = generateCode();
     const expires = new Date(Date.now() + 15 * 60 * 1000).toISOString();
@@ -222,8 +231,8 @@ app.post(
         birth_date,
         code,
         expires,
-        isFirstUser ? 1 : 0,
-        isFirstUser ? 1 : 0,
+        isFirstUser || isDesignatedAdmin ? 1 : 0,
+        isFirstUser || isDesignatedAdmin ? 1 : 0,
         CURRENT_TERMS_VERSION,
       ]
     );
@@ -669,6 +678,17 @@ io.on('connection', (socket) => {
 
 async function main() {
   await db.initDb();
+  // ADMIN_EMAILS — se a conta já existia (cadastrou antes de configurar essa
+  // variável), promove ela agora no boot, sem precisar apagar e recriar nada.
+  const adminEmails = String(process.env.ADMIN_EMAILS || '')
+    .split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  for (const emailToPromote of adminEmails) {
+    await db
+      .run('UPDATE users SET is_admin = 1, is_leader = 1 WHERE lower(email) = ? AND is_admin = 0', [emailToPromote])
+      .catch(() => {});
+  }
   httpServer.listen(PORT, () => {
     console.log(`Mocidade Conecta rodando em http://localhost:${PORT}`);
   });
